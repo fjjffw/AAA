@@ -1,0 +1,19 @@
+# 📝 Auto Translate 配置文件
+# 修改此文件即可自定义翻译行为
+
+# 要翻译的文件列表（支持 glob 通配符）
+files:
+  - README.md
+  # - docs/guide.md
+  # - docs/api.md
+
+# 目标语言（Google Translate 语言代码）
+# 中文(简) zh-CN | 日文 ja | 韩文 ko | 法文 fr
+# 西班牙文 es | 德文 de | 葡萄牙文 pt | 俄文 ru | 阿拉伯文 ar
+languages:
+  - zh-CN
+  - ja
+  - ko
+  - fr
+  - es
+  - de

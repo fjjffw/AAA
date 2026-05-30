@@ -1,0 +1,64 @@
+name: 🌐 Auto Translate Docs
+
+# ─── 触发条件 ──────────────────────────────────
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - "README.md"
+      - "docs/**/*.md"
+      - ".translate.yml"
+      - "scripts/translate.py"
+  workflow_dispatch:          # 允许手动触发
+    inputs:
+      langs:
+        description: "目标语言 (逗号分隔)"
+        required: false
+        default: "zh-CN,ja,ko,fr,es,de"
+
+# ─── 工作流 ────────────────────────────────────
+jobs:
+  translate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write           # 允许直接提交翻译结果
+      pull-requests: write      # 允许创建 PR（二选一）
+
+    steps:
+      - name: 📥 检出代码
+        uses: actions/checkout@v4
+
+      - name: 🐍 安装 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: 📦 安装依赖
+        run: pip install deep-translator pyyaml
+
+      - name: 🌐 运行翻译
+        env:
+          TARGET_LANGS: ${{ github.event.inputs.langs || '' }}
+        run: |
+          if [ -n "$TARGET_LANGS" ]; then
+            python scripts/translate.py --langs "$TARGET_LANGS"
+          else
+            python scripts/translate.py
+          fi
+
+      - name: 📝 提交翻译结果
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # 只添加翻译生成的文件 (README.xx.md 等)
+          git add "README.*.md" "docs/*.*.md" 2>/dev/null || true
+
+          if git diff --staged --quiet; then
+            echo "没有新的翻译变更，跳过提交。"
+          else
+            git commit -m "🌐 auto: update translations [skip ci]"
+            git push
+            echo "✅ 翻译已提交！"
+          fi
